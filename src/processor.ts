@@ -28,31 +28,33 @@ export class Processor
 	// Window is defined by the time between every thread having replied at least once.
 	private process_data_threadWindow(data:any[]) : Reading[]
 	{
-		
-		var rec = function(data:any[], acc:Reading[]):Reading[]
-		{	
+		var readings:Reading[] = [];
+		while(true)
+		{
 			var maxTime	= Number.NEGATIVE_INFINITY;
 			var maxStartTime = Number.NEGATIVE_INFINITY;
+			var maxEndTime = Number.NEGATIVE_INFINITY;
 			// Find out how long until data is available from all threads
 			for(var i=0; i < data.length; i++)
 			{
-				if(data[i].fibTimes[0] > maxTime)
+				var endTime = data[i].fibTimes[0] + data[i].startTimes[0];
+				if(endTime > maxEndTime)
+				//if(data[i].fibTimes[0] > maxTime)
 				{
 					maxTime = data[i].fibTimes[0];
 					maxStartTime = data[i].startTimes[0];
+					maxEndTime = maxTime + maxStartTime;
 				}
 			}
 
 			// Add this max to the results
-			acc.push({result: maxTime, time: maxStartTime});
+			readings.push({result: maxTime, time: maxStartTime});
 
 			// Removes any reading data which happened during max reading above.
 			// The splice operation is destructive by reference, so data is modified.
-			var maxEndTime = maxTime + maxStartTime;
-
 			for(var i=0; i < data.length; i++)
 			{
-				var cutoff = data[i].startTimes.findIndex(function(measurement:any, index:any)
+				var cutoff = data[i].fibTimes.findIndex(function(measurement:any, index:any)
 					{
 						var measurementEndTime = data[i].startTimes[index] + data[i].fibTimes[index];
 						return (measurementEndTime > maxEndTime);
@@ -60,20 +62,15 @@ export class Processor
 				if(cutoff < 0)
 				{
 					// Base case, one of the threads has no more data to add.
-					// Discard any remaining data by returning now.
-					return acc;
+					// Discard any remaining data.
+					return readings;
 				}
 
 				// Removes the data we dont want.
 				data[i].fibTimes.splice(0, cutoff);
 				data[i].startTimes.splice(0, cutoff);
 			}
-			
-			// Call recursively with the now modified data.
-			return rec(data, acc);
 		}
-
-		return rec(data, []);
 	}
 
     // Sorts all data by absolute time, and get the maximum every n 
