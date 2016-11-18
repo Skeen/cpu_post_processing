@@ -1,11 +1,14 @@
 import {Processor} from './processor';
+import {Reading} from './channel';
 
 var fs = require('fs');
-var data = JSON.parse(fs.readFileSync('input.raw', 'utf8'));
-
-console.log(data);
+var data = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 
 var proces = new Processor();
-proces.process_data(data);	
+var readings : Reading[] = proces.process_data(data);
 
-
+console.log("Time, Value");
+readings.forEach(function(reading)
+{
+    console.log(reading.time + ", " + reading.result);
+});
