@@ -9,9 +9,10 @@ export class Processor
         for(var i=0; i<data.length; i++)
         {
             if(data[i].length > 1)
+				result = result.concat(this.process_data_threadWindow(data[i]));
                 //result = result.concat(this.process_data_useTimeDifference(data[i]));
                 //result = result.concat(this.process_data_timeSlicesMax(data));	
-                result = result.concat(this.process_data_useMax(data[i]));
+				//result = result.concat(this.process_data_useMax(data[i]));
                 //result = result.concat(this.process_data_useAll(data[i]));
                 //result = result.concat(this.process_data_useSum(data[i]));
                 else
@@ -20,6 +21,60 @@ export class Processor
 
         return result;
     }
+
+	// Slices data according to when every thread has replied once.
+	//
+	// Reading corresponds to the max of a time window:
+	// Window is defined by the time between every thread having replied at least once.
+	private process_data_threadWindow(data:any[]) : Reading[]
+	{
+		
+		var rec = function(data:any[], acc:Reading[]):Reading[]
+		{	
+			var maxTime	= Number.NEGATIVE_INFINITY;
+			var maxStartTime = Number.NEGATIVE_INFINITY;
+			// Find out how long until data is available from all threads
+			for(var i=0; i < data.length; i++)
+			{
+				if(data[i].fibTimes[0] > maxTime)
+				{
+					maxTime = data[i].fibTimes[0];
+					maxStartTime = data[i].startTimes[0];
+				}
+			}
+
+			// Add this max to the results
+			acc.push({result: maxTime, time: maxStartTime});
+
+			// Removes any reading data which happened during max reading above.
+			// The splice operation is destructive by reference, so data is modified.
+			var maxEndTime = maxTime + maxStartTime;
+
+			for(var i=0; i < data.length; i++)
+			{
+				var cutoff = data[i].startTimes.findIndex(function(measurement:any, index:any)
+					{
+						var measurementEndTime = data[i].startTimes[index] + data[i].fibTimes[index];
+						return (measurementEndTime > maxEndTime);
+					});
+				if(cutoff < 0)
+				{
+					// Base case, one of the threads has no more data to add.
+					// Discard any remaining data by returning now.
+					return acc;
+				}
+
+				// Removes the data we dont want.
+				data[i].fibTimes.splice(0, cutoff);
+				data[i].startTimes.splice(0, cutoff);
+			}
+			
+			// Call recursively with the now modified data.
+			return rec(data, acc);
+		}
+
+		return rec(data, []);
+	}
 
     // Sorts all data by absolute time, and get the maximum every n 
     private process_data_timeSlicesMax(data:any[]): Reading[]
