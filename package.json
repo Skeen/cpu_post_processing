@@ -1,0 +1,19 @@
+{
+  "name": "cpu_post_processing",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "precompile": "mkdir -p dist/",
+    "compile": "./node_modules/typescript/bin/tsc --outDir dist/ src/index.ts typings/index.d.ts",
+    "clean": "rm -rf dist",
+    "postinstall": "typings install",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "typescript": "^2.0.10",
+    "typings": "^2.0.0"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "cpu_post_processor",
+  "version": false,
+  "globalDependencies": {
+    "node": "registry:env/node#4.0.0+20160902022231"
+  }
+}
