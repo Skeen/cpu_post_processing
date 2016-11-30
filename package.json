@@ -6,6 +6,7 @@
   "scripts": {
     "precompile": "mkdir -p dist/; npm i",
     "compile": "./node_modules/typescript/bin/tsc --outDir dist/ src/index.ts typings/index.d.ts",
+    "postcompile": "chmod +x dist/index.js",
     "prestart": "npm run compile",
     "start": "node ./dist/index.js",
     "clean": "rm -rf dist",
